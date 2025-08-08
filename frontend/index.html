@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Materials and Maintenance Request Form</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Battambang:wght@400;700&family=Inter:wght@400;500;600;700&family=Khmer+OS+Muol+Light&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        /* Base styles for the form */
+        body {
+            font-family: 'Battambang', 'Inter', sans-serif;
+            background-color: #f0f2f5;
+        }
+
+        .form-input {
+            @apply px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full;
+            word-break: break-word;
+            height: auto;
+            min-height: 50px;
+            resize: none;
+        }
+
+        .form-label {
+            @apply block text-sm font-medium text-gray-700 mb-1;
+        }
+
+        .table-header {
+            @apply px-4 py-10 text-center text-sm font-medium text-gray-500 uppercase tracking-wider;
+        }
+
+        .table-cell {
+            @apply px-4 py-2 text-sm text-gray-900 text-center align-top;
+            border: 1px solid #e5e7eb;
+            word-break: break-word;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+        }
+
+        .khmer-title {
+            font-family: 'Khmer OS Muol Light', 'Battambang', sans-serif;
+            font-weight: 400;
+        }
+
+        .name-input-field {
+            @apply px-3 py-2 border-b border-gray-400 focus:outline-none focus:border-blue-500 w-full text-center;
+            background-color: transparent;
+            height: 4rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 1rem;
+            font-size: 0.875rem;
+            color: #1f2937;
+        }
+
+        /* --- Styles for the Message Box --- */
+        .message-box {
+            @apply fixed bottom-4 right-4 bg-gray-800 text-white px-4 py-3 rounded-lg shadow-lg z-50 transition-opacity duration-300;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .message-box.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* --- Styles for the Capture Process --- */
+        /* These styles are applied only when a capture is active */
+        .hide-on-capture {
+            display: none !important;
+        }
+        
+        .capture-active {
+            overflow: hidden !important;
+            position: relative !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 100vw !important;
+            height: auto !important;
+            box-sizing: border-box !important;
+        }
+        
+        .capture-active #formContainer {
+            box-shadow: none !important;
+            border: none !important;
+        }
+
+        /* Override specific element styles for capture */
+        .capture-active .form-input,
+        .capture-active .table-cell,
+        .capture-active .form-checkbox,
+        .capture-active .table-header,
+        .capture-active .flex label.inline-flex span,
+        .capture-active .name-input-field {
+            overflow: visible !important;
+            white-space: normal !important;
+            word-break: normal !important;
+        }
+
+        .capture-active .table-cell textarea.form-input {
+            border: none !important;
+            background-color: transparent !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            height: 100% !important;
+            width: 100% !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            overflow: hidden !important;
+            text-align: center !important;
+        }
+
+        .capture-active input[type="checkbox"] {
+            display: inline-block !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+            min-width: 16px !important;
+            min-height: 16px !important;
+            margin-right: 4px !important;
+            box-shadow: none !important;
+            vertical-align: middle !important;
+            background-color: white !important;
+            border: 1px solid #ccc !important;
+            border-radius: 0.25rem !important;
+        }
+
+        .capture-active .flex label.inline-flex {
+            align-items: center !important;
+            display: inline-flex !important;
+        }
+
+        .capture-active .table-cell {
+            height: 50px !important;
+            min-height: 50px !important;
+        }
+
+        .capture-active .table-header {
+            height: 80px !important;
+            min-height: 80px !important;
+        }
+
+        .capture-active #department {
+            text-align: left !important;
+            width: 100% !important;
+            padding: 0.5rem 0.75rem !important;
+            border: none !important;
+            box-shadow: none !important;
+            border-radius: 0.375rem !important;
+            background-color: white !important;
+        }
+        
+        .capture-active #requestDate {
+            text-align: right !important;
+            width: auto !important;
+            padding: 0.5rem 0.75rem !important;
+            border: none !important;
+            box-shadow: none !important;
+            border-radius: 0.375rem !important;
+            background-color: white !important;
+        }
+        
+        .capture-active .name-input-field {
+            border: none !important;
+            box-shadow: none !important;
+            background-color: white !important;
+            color: #1f2937 !important;
+            text-align: center !important;
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+
+        .capture-active .caption-text {
+            display: none !important;
+        }
+
+    </style>
+</head>
+<body class="p-4 sm:p-6 lg:p-8">
+    <div id="captureWrapper">
+        <div class="max-w-4xl mx-auto bg-white p-6 sm:p-8 rounded-lg shadow-xl border border-gray-200" id="formContainer">
+            <div class="grid grid-cols-3 items-center mb-6">
+                <div class="flex justify-start">
+                    <!-- Placeholder logo image. Please replace with your own. -->
+                    <img src="assets/logo Y S G.png" alt="Company Logo" class="w-20 sm:w-24 md:w-28 h-auto object-contain">
+                </div>
+                <div class="text-center">
+                    <h1 class="text-base sm:text-lg text-gray-800 mb-1 khmer-title whitespace-nowrap">លិខិតស្នើសុំសម្ភារៈ និង ជួសជុល</h1>
+                    <h2 class="text-sm sm:text-base font-semibold text-gray-700">材料和维修申请单</h2>
+                </div>
+                <div></div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 space-y-4 sm:space-y-0">
+                <div class="flex items-center space-x-2 w-full sm:w-auto">
+                    <label for="department" class="form-label flex-shrink-0">ផ្នែក: / 部门:</label>
+                    <input type="text" id="department" name="department" class="form-input flex-grow" placeholder="Department Name">
+                </div>
+                <div class="flex items-center space-x-2 w-full sm:w-auto mt-2 sm:mt-0 sm:ml-auto">
+                    <span class="text-gray-700 font-medium whitespace-nowrap">ថ្ងៃទី / 日期:</span>
+                    <input type="date" id="requestDate" name="requestDate" class="form-input" value="2025-07-19">
+                </div>
+            </div>
+
+            <div class="mb-6">
+                <label class="form-label mb-2">ស្នើសុំតាមរយៈ / 请求:</label>
+                <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
+                    <label class="inline-flex items-center">
+                        <input type="checkbox" name="requestTypeCompany" value="company" class="form-checkbox h-4 w-4 text-blue-600 rounded">
+                        <span class="ml-2 text-gray-700">ក្រុមហ៊ុន / 公司</span>
+                    </label>
+                    <label class="inline-flex items-center">
+                        <input type="checkbox" name="requestTypeDepartment" value="department" class="form-checkbox h-4 w-4 text-blue-600 rounded">
+                        <span class="ml-2 text-gray-700">សាខា / 部门</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto rounded-lg shadow-sm border border-gray-200 mb-8">
+                <table class="min-w-full divide-y divide-gray-200" id="requestTable">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="table-header w-1/12">លេខ<br>号码</th>
+                            <th class="table-header w-4/12">ឈ្មោះសម្ភារៈ<br>品名</th>
+                            <th class="table-header w-2/12">ចំនួន<br>数量</th>
+                            <th class="table-header w-5/12">មូលហេតុ<br>原因</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        <tr>
+                            <td class="table-cell text-center">1</td>
+                            <td class="table-cell"><textarea name="itemName1" class="form-input resize-none" rows="2">សំបកកង់ឡាន (195R16)</textarea></td>
+                            <td class="table-cell"><textarea name="quantity1" class="form-input resize-none" rows="2">2pcs</textarea></td>
+                            <td class="table-cell"><textarea name="reason1" class="form-input resize-none" rows="2"></textarea></td>
+                        </tr>
+                        <tr>
+                            <td class="table-cell text-center">2</td>
+                            <td class="table-cell"><textarea name="itemName2" class="form-input resize-none" rows="2"></textarea></td>
+                            <td class="table-cell"><textarea name="quantity2" class="form-input resize-none" rows="2"></textarea></td>
+                            <td class="table-cell"><textarea name="reason2" class="form-input resize-none" rows="2"></textarea></td>
+                        </tr>
+                        <tr>
+                            <td class="table-cell text-center">3</td>
+                            <td class="table-cell"><textarea name="itemName3" class="form-input resize-none" rows="2"></textarea></td>
+                            <td class="table-cell"><textarea name="quantity3" class="form-input resize-none" rows="2"></textarea></td>
+                            <td class="table-cell"><textarea name="reason3" class="form-input resize-none" rows="2"></textarea></td>
+                        </tr>
+                        <tr>
+                            <td class="table-cell text-center">4</td>
+                            <td class="table-cell"><textarea name="itemName4" class="form-input resize-none" rows="2"></textarea></td>
+                            <td class="table-cell"><textarea name="quantity4" class="form-input resize-none" rows="2"></textarea></td>
+                            <td class="table-cell"><textarea name="reason4" class="form-input resize-none" rows="2"></textarea></td>
+                        </tr>
+                        <tr>
+                            <td class="table-cell text-center">5</td>
+                            <td class="table-cell"><textarea name="itemName5" class="form-input resize-none" rows="2"></textarea></td>
+                            <td class="table-cell"><textarea name="quantity5" class="form-input resize-none" rows="2"></textarea></td>
+                            <td class="table-cell"><textarea name="reason5" class="form-input resize-none" rows="2"></textarea></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 text-center">
+                <div>
+                    <p class="font-semibold text-gray-700 mb-2">អ្នកស្នើសុំ / 申请人</p>
+                    <p class="text-sm text-gray-500 caption-text">(Applicant)</p>
+                    <input type="text" name="applicantName" placeholder="Enter Name" class="name-input-field">
+                </div>
+                <div>
+                    <p class="font-semibold text-gray-700 mb-2">ប្រធានផ្នែក / 主管</p>
+                    <p class="text-sm text-gray-500 caption-text">(Head of Department)</p>
+                    <input type="text" name="headOfDepartmentName" placeholder="Enter Name" class="name-input-field">
+                </div>
+                <div>
+                    <p class="font-semibold text-gray-700 mb-2">ហត្ថលេខាអ្នកអនុម័ត / 审核人</p>
+                    <p class="text-sm text-gray-500 caption-text">(Approver)</p>
+                    <input type="text" name="approverName" placeholder="Enter Name" class="name-input-field">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-8 flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4" id="actionButtons">
+        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-md shadow-lg transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
+            Submit Request
+        </button>
+        <button type="button" onclick="downloadFormAsImage()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-md shadow-lg transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50">
+            Download Form as PNG
+        </button>
+        <button type="button" onclick="shareFormAsImage()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-md shadow-lg transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50">
+            Share Form via Telegram
+        </button>
+    </div>
+
+    <div id="messageBox" class="message-box"></div>
+
+    <script>
+        // --- Configuration for Backend URL ---
+        // IMPORTANT: For deployment, replace 'http://localhost:3000' with the actual
+        // IP address or domain of your deployed Node.js server.
+        const BACKEND_URL = 'http://localhost:3000'; // Change this for deployment!
+        // Example for another computer on the same network: 'http://192.168.1.100:3000'
+        // Example for a deployed server: 'https://your-server-domain.com'
+
+        // --- Helper Functions ---
+
+        // Function to display messages in a temporary box
+        function showMessage(message, type = 'info') {
+            const messageBox = document.getElementById('messageBox');
+            messageBox.textContent = message;
+            messageBox.className = 'message-box show';
+            if (type === 'error') {
+                messageBox.classList.add('bg-red-600');
+            } else {
+                messageBox.classList.add('bg-gray-800');
+            }
+            setTimeout(() => {
+                messageBox.classList.remove('show');
+                messageBox.classList.remove('bg-red-600');
+                messageBox.classList.remove('bg-gray-800');
+            }, 3000); // Hide after 3 seconds
+        }
+        
+        // Function to handle the capture process common to both download and share
+        async function prepareForCapture() {
+            const captureWrapper = document.getElementById('captureWrapper');
+            const actionButtons = document.getElementById('actionButtons');
+
+            // Temporarily hide the buttons and apply capture-specific styles
+            actionButtons.classList.add('hide-on-capture');
+            document.body.classList.add('capture-active');
+
+            // Store original styles to revert later
+            const originalBodyOverflow = document.body.style.overflow;
+            const originalBodyHeight = document.body.style.height;
+            const originalCaptureWrapperMarginTop = captureWrapper.style.marginTop;
+            const originalCaptureWrapperHeight = captureWrapper.style.height;
+            const originalCaptureWrapperOverflow = captureWrapper.style.overflow;
+            const originalCaptureWrapperPosition = captureWrapper.style.position;
+
+            // Prepare the wrapper for capture
+            captureWrapper.style.marginTop = '200px';
+            captureWrapper.style.height = 'auto';
+            captureWrapper.style.overflow = 'visible';
+            captureWrapper.style.position = 'relative';
+
+            // Scroll to the very top of the window
+            window.scrollTo(0, 0);
+
+            // Give the browser time to render the new styles and scroll
+            await new Promise(resolve => setTimeout(resolve, 3000));
+
+            // Explicitly set the captureWrapper's height to its full scrollHeight
+            const currentScrollHeight = captureWrapper.scrollHeight;
+            captureWrapper.style.height = currentScrollHeight + 'px';
+
+            // Give another delay for final rendering stabilization
+            await new Promise(resolve => setTimeout(resolve, 2000));
+
+            // Hide placeholders and captions before capture
+            document.querySelectorAll('.name-input-field').forEach(input => {
+                if (input.placeholder) {
+                    input.setAttribute('data-placeholder', input.placeholder);
+                    input.placeholder = '';
+                }
+            });
+            document.querySelectorAll('.caption-text').forEach(caption => {
+                caption.style.display = 'none';
+            });
+            
+            return {
+                originalBodyOverflow, originalBodyHeight, originalCaptureWrapperMarginTop,
+                originalCaptureWrapperHeight, originalCaptureWrapperOverflow, originalCaptureWrapperPosition
+            };
+        }
+
+        // Function to revert styles after the capture is complete
+        function revertAfterCapture(originalStyles) {
+            const captureWrapper = document.getElementById('captureWrapper');
+            const actionButtons = document.getElementById('actionButtons');
+
+            // Restore placeholders and captions
+            document.querySelectorAll('.name-input-field').forEach(input => {
+                if (input.getAttribute('data-placeholder')) {
+                    input.placeholder = input.getAttribute('data-placeholder');
+                    input.removeAttribute('data-placeholder');
+                }
+            });
+            document.querySelectorAll('.caption-text').forEach(caption => {
+                caption.style.display = 'block';
+            });
+
+            // Restore original styles and remove capture-specific classes
+            document.body.style.overflow = originalStyles.originalBodyOverflow;
+            document.body.style.height = originalStyles.originalBodyHeight;
+            document.body.classList.remove('capture-active');
+
+            captureWrapper.style.marginTop = originalStyles.originalCaptureWrapperMarginTop;
+            captureWrapper.style.height = originalStyles.originalCaptureWrapperHeight;
+            captureWrapper.style.overflow = originalStyles.originalCaptureWrapperOverflow;
+            captureWrapper.style.position = originalStyles.originalCaptureWrapperPosition;
+            actionButtons.classList.remove('hide-on-capture');
+        }
+
+        // --- Main Functions for User Actions ---
+
+        // Function to download the form as a PNG
+        async function downloadFormAsImage() {
+            let originalStyles;
+            try {
+                originalStyles = await prepareForCapture();
+                const captureWrapper = document.getElementById('captureWrapper');
+
+                const canvas = await html2canvas(captureWrapper, {
+                    scale: 3,
+                    useCORS: true,
+                    logging: false,
+                    x: 0,
+                    y: 0,
+                    width: captureWrapper.offsetWidth,
+                    height: captureWrapper.offsetHeight,
+                });
+
+                const imageDataUrl = canvas.toDataURL('image/png');
+                const link = document.createElement('a');
+                link.href = imageDataUrl;
+                link.download = 'request_form.png';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                showMessage('Form downloaded as PNG!');
+            } catch (error) {
+                console.error('Error capturing form as image for download:', error);
+                showMessage('Failed to download form as image. Check console for details.', 'error');
+            } finally {
+                if (originalStyles) {
+                    revertAfterCapture(originalStyles);
+                }
+            }
+        }
+
+        // Function to share the form image via Telegram (requires backend)
+        async function shareFormAsImage() {
+            let originalStyles;
+            try {
+                originalStyles = await prepareForCapture();
+                const captureWrapper = document.getElementById('captureWrapper');
+
+                const canvas = await html2canvas(captureWrapper, {
+                    scale: 3,
+                    useCORS: true,
+                    logging: false,
+                    x: 0,
+                    y: 0,
+                    width: captureWrapper.offsetWidth,
+                    height: captureWrapper.offsetHeight,
+                });
+
+                const imageDataUrl = canvas.toDataURL('image/png');
+
+                // --- IMPORTANT: This part requires a backend server ---
+                const uploadResponse = await fetch(`${BACKEND_URL}/upload-form-image`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ imageData: imageDataUrl, filename: 'form_submission_' + new Date().toISOString() + '.png' }),
+                });
+
+                if (uploadResponse.ok) {
+                    const result = await uploadResponse.json();
+                    const imageUrl = result.url;
+                    const telegramMessage = encodeURIComponent('Hello Boss, here is the filled request form:');
+                    const telegramLink = `https://t.me/share/url?url=${encodeURIComponent(imageUrl)}&text=${telegramMessage}`;
+                    window.open(telegramLink, '_blank');
+                    showMessage('Form image link prepared for Telegram!');
+                } else {
+                    const errorText = await uploadResponse.text();
+                    console.error('Upload error:', uploadResponse.statusText);
+                    console.error('Upload error details:', errorText);
+                    showMessage('Failed to upload image for sharing. Check console for details.', 'error');
+                }
+            } catch (error) {
+                console.error('Error sharing form as image:', error);
+                showMessage('An error occurred during sharing. Ensure backend is running and URL is correct.', 'error');
+            } finally {
+                if (originalStyles) {
+                    revertAfterCapture(originalStyles);
+                }
+            }
+        }
+    </script>
+</body>
+</html>

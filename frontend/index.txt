@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Materials and Maintenance Request Form</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Battambang:wght@400;700&family=Inter:wght@400;500;600;700&family=Khmer+OS+Muol+Light&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+    body {
+        font-family: 'Battambang', 'Inter', sans-serif;
+        background-color: #f0f2f5;
+    }
+    .form-input {
+        @apply px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full;
+        word-break: break-word; /* Allow text to wrap inside */
+        height: auto; /* Let it grow */
+        min-height: 50px; /* Reverted height for input boxes */
+        resize: none; /* Prevent manual resizing of textareas */
+    }
+
+    /* Specific styling for textareas within table cells to ensure centering in capture */
+    .table-cell textarea.form-input {
+        border: none; /* Remove border from textarea */
+        background-color: transparent; /* Make textarea background transparent */
+        box-shadow: none; /* Remove any shadow */
+        padding: 0; /* Remove padding */
+        margin: 0; /* Remove margin */
+        height: 100%; /* Ensure it fills the cell vertically */
+        width: 100%; /* Ensure it fills the cell horizontally */
+        display: flex; /* Make the textarea a flex container */
+        align-items: center; /* Vertically center content inside textarea */
+        justify-content: center; /* Horizontally center content inside textarea */
+        overflow: hidden; /* Hide scrollbars if content overflows, we want visual fit */
+        text-align: center; /* Explicitly center text in table textareas */
+    }
+
+    .form-label {
+        @apply block text-sm font-medium text-gray-700 mb-1;
+    }
+    .table-header {
+        /* Increased py- value to make the header cells taller */
+        /* Increased font size for table headers */
+        @apply px-4 py-10 text-center text-sm font-medium text-gray-500 uppercase tracking-wider; /* py- increased to py-10 */
+    }
+    .table-cell {
+        @apply px-4 py-2 text-sm text-gray-900 text-center align-top; /* Reverted py- to py-2 */
+        border: 1px solid #e5e7eb;
+        word-break: break-word;
+        /* Make the table cell itself a flex container to center its child (the textarea) */
+        display: flex;
+        align-items: center; /* Vertically center the textarea within the cell */
+        justify-content: center; /* Horizontally center the textarea within the cell */
+        height: 100%; /* Ensure flex container takes full height of cell */
+    }
+    .khmer-title {
+        font-family: 'Khmer OS Muol Light', 'Battambang', sans-serif;
+        font-weight: 400;
+    }
+    .hide-on-capture {
+        display: none !important;
+    }
+    /* Styles for the message box */
+    .message-box {
+        @apply fixed bottom-4 right-4 bg-gray-800 text-white px-4 py-3 rounded-lg shadow-lg z-50 transition-opacity duration-300;
+        opacity: 0;
+        pointer-events: none;
+    }
+    .message-box.show {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    /* New styles for capture optimization */
+    .capture-active {
+        overflow: hidden !important; /* Hide scrollbars during capture */
+        position: relative !important; /* Ensure positioning context */
+        margin: 0 !important; /* Remove any external margins */
+        padding: 0 !important; /* Remove any external padding */
+        width: 100vw !important; /* Ensure full viewport width */
+        height: auto !important; /* Let content define height for capture */
+        box-sizing: border-box !important; /* Consistent box model */
+    }
+    /* Ensure form elements are visible and not clipped during capture */
+    .capture-active .form-input,
+    .capture-active .table-cell,
+    .capture-active .form-checkbox,
+    .capture-active .table-header,
+    .capture-active .flex label.inline-flex span,
+    .capture-active .name-input-field { /* Added name-input-field */
+        overflow: visible !important; /* Ensure content is not clipped */
+        white-space: normal !important; /* Allow text wrapping if needed for elements */
+        word-break: normal !important; /* Prevent unwanted word breaking */
+    }
+    /* Force checkboxes to be visible and render natively */
+    .capture-active input[type="checkbox"] {
+        display: inline-block !important; /* Ensure they are not hidden by flex/grid issues */
+        opacity: 1 !important; /* Ensure they are not transparent */
+        visibility: visible !important; /* Ensure they are visible */
+        min-width: 16px !important; /* Ensure a minimum size */
+        min-height: 16px !important;
+        margin-right: 4px !important; /* Add a small margin to separate from text */
+        box-shadow: none !important; /* Remove any box shadow */
+        vertical-align: middle !important; /* Align with text */
+        /* Explicit styling for better capture */
+        background-color: white !important;
+        border: 1px solid #ccc !important; /* Subtle border for checkbox box */
+        border-radius: 0.25rem !important; /* Match Tailwind's rounded-md for checkboxes */
+    }
+    /* Ensure consistent spacing for checkbox labels */
+    .capture-active .flex label.inline-flex {
+        align-items: center !important; /* Ensure vertical alignment */
+        display: inline-flex !important; /* Force inline-flex for capture */
+    }
+    /* Ensure table cells have defined height during capture to prevent collapse */
+    .capture-active .table-cell {
+        height: 50px !important; /* Explicit height for capture, adjust as needed */
+        min-height: 50px !important;
+    }
+    /* Ensure table headers have defined height during capture */
+    .capture-active .table-header {
+        height: 80px !important; /* Explicit height for capture, adjust as needed */
+        min-height: 80px !important;
+    }
+
+    /* Specific capture styles for Department and Date inputs */
+    .capture-active #department {
+        text-align: left !important; /* Force left alignment during capture */
+        width: 100% !important; /* Ensure it takes full width of its flex container */
+        padding: 0.5rem 0.75rem !important; /* Match form-input padding */
+        border: none !important; /* REMOVE BORDER */
+        box-shadow: none !important; /* REMOVE OUTLINE/SHADOW */
+        border-radius: 0.375rem !important; /* Match form-input rounded corners */
+        background-color: white !important; /* Ensure white background */
+    }
+    .capture-active #requestDate {
+        text-align: right !important; /* Force right alignment during capture */
+        width: auto !important; /* Allow it to shrink to content size */
+        padding: 0.5rem 0.75rem !important; /* Match form-input padding */
+        border: none !important; /* REMOVE BORDER */
+        box-shadow: none !important; /* REMOVE OUTLINE/SHADOW */
+        border-radius: 0.375rem !important; /* Match form-input rounded corners */
+        background-color: white !important; /* Ensure white background */
+    }
+    /* Ensure the parent flex containers behave correctly during capture */
+    .capture-active .flex.items-center.space-x-2.w-full.sm\:w-auto {
+        justify-content: flex-start !important; /* Align department section to start */
+        flex-wrap: nowrap !important; /* Prevent wrapping */
+    }
+    .capture-active .text-right.w-full.sm\:w-auto {
+        text-align: right !important; /* Ensure date section is right aligned */
+        flex-wrap: nowrap !important; /* Prevent wrapping */
+    }
+    .capture-active .flex-grow {
+        flex-grow: 1 !important; /* Ensure it takes available space */
+    }
+    .capture-active .flex-shrink-0 {
+        flex-shrink: 0 !important; /* Prevent shrinking */
+    }
+
+    /* Styles for the new name input fields */
+    .name-input-field {
+        @apply px-3 py-2 border-b border-gray-400 focus:outline-none focus:border-blue-500 w-full text-center;
+        background-color: transparent; /* Ensure transparent background */
+        height: 4rem; /* Match the original signature area height */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 1rem; /* Match original margin-top */
+        font-size: 0.875rem; /* text-sm */
+        color: #1f2937; /* text-gray-900 */
+    }
+    /* Capture-specific styles for name input fields */
+    .capture-active .name-input-field {
+        border: none !important; /* Remove border during capture */
+        box-shadow: none !important; /* Remove outline during capture */
+        background-color: white !important; /* Ensure white background during capture */
+        color: #1f2937 !important; /* Ensure text color is visible */
+        text-align: center !important; /* Ensure text is centered */
+        padding: 0 !important; /* Remove padding during capture */
+        margin: 0 !important; /* Remove margin during capture */
+    }
+
+
+</style>
+
+</head>
+<body class="p-4 sm:p-6 lg:p-8">
+    <div id="captureWrapper">
+        <div class="max-w-4xl mx-auto bg-white p-6 sm:p-8 rounded-lg shadow-xl border border-gray-200" id="formContainer">
+            <!-- Updated Header Section for Responsive Logo and Centered Titles -->
+            <div class="grid grid-cols-3 items-center mb-6">
+                <!-- Column 1: Logo (left aligned) -->
+                <div class="flex justify-start">
+                    <img src="assets/logo Y S G.png" alt="Company Logo" class="w-24 sm:w-32 md:w-40 h-auto object-contain">
+                </div>
+                <!-- Column 2: Titles (centered) -->
+                <div class="text-center">
+                    <h1 class="text-base sm:text-lg text-gray-800 mb-1 khmer-title whitespace-nowrap">លិខិតស្នើសុំសម្ភារៈ និង ជួសជុល</h1>
+                    <h2 class="text-sm sm:text-base font-semibold text-gray-700">材料和维修申请单</h2>
+                </div>
+                <!-- Column 3: Empty div to balance spacing (right aligned) -->
+                <div></div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 space-y-4 sm:space-y-0">
+                <div class="flex items-center space-x-2 w-full sm:w-auto">
+                    <label for="department" class="form-label flex-shrink-0">ផ្នែក: / 部门:</label>
+                    <input type="text" id="department" name="department" class="form-input flex-grow" placeholder="Department Name">
+                </div>
+                <div class="text-right w-full sm:w-auto">
+                    <span class="text-gray-700 font-medium">ថ្ងៃទី / 日期:</span>
+                    <input type="date" id="requestDate" name="requestDate" class="form-input inline-block w-full sm:w-auto mt-1 sm:mt-0" value="2025-07-19">
+                </div>
+            </div>
+
+            <div class="mb-6">
+                <label class="form-label mb-2">ស្នើសុំតាមរយៈ / 请求:</label>
+                <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
+                    <!-- Changed to Checkbox -->
+                    <label class="inline-flex items-center">
+                        <input type="checkbox" name="requestTypeCompany" value="company" class="form-checkbox h-4 w-4 text-blue-600 rounded">
+                        <span class="ml-2 text-gray-700">ក្រុមហ៊ុន / 公司</span>
+                    </label>
+                    <!-- Changed to Checkbox -->
+                    <label class="inline-flex items-center">
+                        <input type="checkbox" name="requestTypeDepartment" value="department" class="form-checkbox h-4 w-4 text-blue-600 rounded">
+                        <span class="ml-2 text-gray-700">សាខា / 部门</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto rounded-lg shadow-sm border border-gray-200 mb-8">
+                <table class="min-w-full divide-y divide-gray-200" id="requestTable">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="table-header w-1/12">លេខ<br>号码</th>
+                            <th class="table-header w-4/12">ឈ្មោះសម្ភារៈ<br>品名</th>
+                            <th class="table-header w-2/12">ចំនួន<br>数量</th>
+                            <th class="table-header w-5/12">មូលហេតុ<br>原因</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        <tr>
+                            <td class="table-cell text-center">1</td>
+                            <td class="table-cell"><textarea name="itemName1" class="form-input resize-none" rows="2">សំបកកង់ឡាន (195R16)</textarea></td>
+                            <td class="table-cell"><textarea name="quantity1" class="form-input resize-none" rows="2">2pcs</textarea></td>
+                            <td class="table-cell"><textarea name="reason1" class="form-input resize-none" rows="2"></textarea></td>
+                        </tr>
+                        <tr>
+                            <td class="table-cell text-center">2</td>
+                            <td class="table-cell"><textarea name="itemName2" class="form-input resize-none" rows="2"></textarea></td>
+                            <td class="table-cell"><textarea name="quantity2" class="form-input resize-none" rows="2"></textarea></td>
+                            <td class="table-cell"><textarea name="reason2" class="form-input resize-none" rows="2"></textarea></td>
+                        </tr>
+                        <tr>
+                            <td class="table-cell text-center">3</td>
+                            <td class="table-cell"><textarea name="itemName3" class="form-input resize-none" rows="2"></textarea></td>
+                            <td class="table-cell"><textarea name="quantity3" class="form-input resize-none" rows="2"></textarea></td>
+                            <td class="table-cell"><textarea name="reason3" class="form-input resize-none" rows="2"></textarea></td>
+                        </tr>
+                        <tr>
+                            <td class="table-cell text-center">4</td>
+                            <td class="table-cell"><textarea name="itemName4" class="form-input resize-none" rows="2"></textarea></td>
+                            <td class="table-cell"><textarea name="quantity4" class="form-input resize-none" rows="2"></textarea></td>
+                            <td class="table-cell"><textarea name="reason4" class="form-input resize-none" rows="2"></textarea></td>
+                        </tr>
+                        <tr>
+                            <td class="table-cell text-center">5</td>
+                            <td class="table-cell"><textarea name="itemName5" class="form-input resize-none" rows="2"></textarea></td>
+                            <td class="table-cell"><textarea name="quantity5" class="form-input resize-none" rows="2"></textarea></td>
+                            <td class="table-cell"><textarea name="reason5" class="form-input resize-none" rows="2"></textarea></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 text-center">
+                <div>
+                    <p class="font-semibold text-gray-700 mb-2">អ្នកស្នើសុំ / 申请人</p>
+                    <p class="text-sm text-gray-500">(Applicant)</p>
+                    <!-- Replaced signature area with input for name -->
+                    <input type="text" name="applicantName" placeholder="Enter Name" class="name-input-field">
+                </div>
+                <div>
+                    <p class="font-semibold text-gray-700 mb-2">ប្រធានផ្នែក / 主管</p>
+                    <p class="text-sm text-gray-500">(Head of Department)</p>
+                    <!-- Replaced signature area with input for name -->
+                    <input type="text" name="headOfDepartmentName" placeholder="Enter Name" class="name-input-field">
+                </div>
+                <div>
+                    <p class="font-semibold text-gray-700 mb-2">ហត្ថលេខាអ្នកអនុម័ត / 审核人</p>
+                    <p class="text-sm text-gray-500">(Approver)</p>
+                    <!-- Replaced signature area with input for name -->
+                    <input type="text" name="approverName" placeholder="Enter Name" class="name-input-field">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-8 flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4" id="actionButtons">
+        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-md shadow-lg transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
+            Submit Request
+        </button>
+        <button type="button" onclick="downloadFormAsImage()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-md shadow-lg transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50">
+            Download Form as PNG
+        </button>
+        <button type="button" onclick="shareFormAsImage()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-md shadow-lg transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50">
+            Share Form via Telegram
+        </button>
+    </div>
+
+    <!-- Message Box -->
+    <div id="messageBox" class="message-box"></div>
+
+    <script>
+        // --- Configuration for Backend URL ---
+        // IMPORTANT: For deployment, replace 'http://localhost:3000' with the actual
+        // IP address or domain of your deployed Node.js server.
+        const BACKEND_URL = 'http://localhost:3000'; // Change this for deployment!
+        // Example for another computer on the same network: 'http://192.168.1.100:3000'
+        // Example for a deployed server: 'https://your-server-domain.com'
+
+
+        // Function to display messages
+        function showMessage(message, type = 'info') {
+            const messageBox = document.getElementById('messageBox');
+            messageBox.textContent = message;
+            messageBox.className = 'message-box show'; // Reset classes and show
+            if (type === 'error') {
+                messageBox.classList.add('bg-red-600');
+            } else {
+                messageBox.classList.add('bg-gray-800');
+            }
+            setTimeout(() => {
+                messageBox.classList.remove('show');
+                messageBox.classList.remove('bg-red-600');
+                messageBox.classList.remove('bg-gray-800');
+            }, 3000); // Hide after 3 seconds
+        }
+
+        // Function to download the form as a PNG
+        async function downloadFormAsImage() {
+            const captureWrapper = document.getElementById('captureWrapper');
+            const actionButtons = document.getElementById('actionButtons');
+
+            // Temporarily hide the buttons and apply capture-specific styles
+            actionButtons.classList.add('hide-on-capture');
+            document.body.classList.add('capture-active'); // Apply new class to body
+
+            // Store original styles to revert later
+            const originalBodyOverflow = document.body.style.overflow;
+            const originalBodyHeight = document.body.style.height;
+            const originalCaptureWrapperMarginTop = captureWrapper.style.marginTop;
+            const originalCaptureWrapperHeight = captureWrapper.style.height;
+            const originalCaptureWrapperOverflow = captureWrapper.style.overflow;
+            const originalCaptureWrapperPosition = captureWrapper.style.position;
+
+
+            // Step 1: Prepare the wrapper for capture
+            // Add a very generous TOP MARGIN to the captureWrapper to push content down
+            captureWrapper.style.marginTop = '200px'; // Aggressive top margin for capture
+            captureWrapper.style.height = 'auto'; // Let content dictate height
+            captureWrapper.style.overflow = 'visible'; // Ensure all content is visible
+            captureWrapper.style.position = 'relative'; // Ensure positioning context for html2canvas if needed
+
+
+            // Scroll to the very top of the window, ensuring no prior scroll interferes
+            window.scrollTo(0, 0);
+
+            // Give the browser ample time to render and apply the new margin
+            await new Promise(resolve => setTimeout(resolve, 3000)); // Increased delay to 3 seconds
+
+            // Step 2: Explicitly set the captureWrapper's height to its full scrollHeight
+            // This ensures html2canvas sees the full content area after all adjustments
+            const currentScrollHeight = captureWrapper.scrollHeight;
+            captureWrapper.style.height = currentScrollHeight + 'px';
+
+            // Give another delay for final rendering stabilization
+            await new Promise(resolve => setTimeout(resolve, 2000)); // Increased delay to 2 seconds
+
+            try {
+                const canvas = await html2canvas(captureWrapper, { // Capture the wrapper
+                    scale: 3,
+                    useCORS: true,
+                    logging: false,
+                    x: 0, // Start capture from the very left of the element
+                    y: 0, // Start capture from the very top of the element
+                    width: captureWrapper.offsetWidth, // Capture current rendered width
+                    height: captureWrapper.offsetHeight, // Capture current rendered height
+                });
+
+                const imageDataUrl = canvas.toDataURL('image/png');
+                const link = document.createElement('a');
+                link.href = imageDataUrl;
+                link.download = 'request_form.png';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                showMessage('Form downloaded as PNG!');
+            } catch (error) {
+                console.error('Error capturing form as image for download:', error);
+                showMessage('Failed to download form as image. Check console for details.', 'error');
+            } finally {
+                // Restore original styles and remove capture-specific classes
+                document.body.style.overflow = originalBodyOverflow;
+                document.body.style.height = originalBodyHeight;
+                document.body.classList.remove('capture-active'); // Remove new class from body
+
+                captureWrapper.style.marginTop = originalCaptureWrapperMarginTop; // Restore original margin-top
+                captureWrapper.style.height = originalCaptureWrapperHeight;
+                captureWrapper.style.overflow = originalCaptureWrapperOverflow;
+                captureWrapper.style.position = originalCaptureWrapperPosition;
+
+                actionButtons.classList.remove('hide-on-capture');
+            }
+        }
+
+
+        // Function to share the form image via Telegram (requires backend)
+        async function shareFormAsImage() {
+            const captureWrapper = document.getElementById('captureWrapper');
+            const actionButtons = document.getElementById('actionButtons');
+
+            // Temporarily hide the buttons and apply capture-specific styles
+            actionButtons.classList.add('hide-on-capture');
+            document.body.classList.add('capture-active'); // Apply new class to body
+
+            // Store original styles (same as download function)
+            const originalCaptureWrapperMarginTop = captureWrapper.style.marginTop;
+            const originalCaptureWrapperHeight = captureWrapper.style.height;
+            const originalCaptureWrapperOverflow = captureWrapper.style.overflow;
+            const originalCaptureWrapperPosition = captureWrapper.style.position;
+            const originalBodyOverflow = document.body.style.overflow;
+            const originalBodyHeight = document.body.style.height;
+
+
+            // Prepare for capture (same as download function)
+            captureWrapper.style.marginTop = '200px';
+            captureWrapper.style.height = 'auto';
+            captureWrapper.style.overflow = 'visible';
+            captureWrapper.style.position = 'relative';
+
+
+            window.scrollTo(0, 0);
+
+            await new Promise(resolve => setTimeout(resolve, 3000)); // Increased delay to 3 seconds
+            captureWrapper.style.height = captureWrapper.scrollHeight + 'px';
+            await new Promise(resolve => setTimeout(resolve, 2000)); // Increased delay to 2 seconds
+
+            try {
+                const canvas = await html2canvas(captureWrapper, { // Capture the wrapper
+                    scale: 3,
+                    useCORS: true,
+                    logging: false,
+                    x: 0, // Start capture from the very left of the element
+                    y: 0, // Start capture from the very top of the element
+                    width: captureWrapper.offsetWidth, // Capture current rendered width
+                    height: captureWrapper.offsetHeight, // Capture current rendered height
+                });
+
+                const imageDataUrl = canvas.toDataURL('image/png');
+
+                // --- IMPORTANT: This part requires a backend server ---
+                // Use the configurable BACKEND_URL
+                const uploadResponse = await fetch(`${BACKEND_URL}/upload-form-image`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ imageData: imageDataUrl, filename: 'form_submission_' + new Date().toISOString() + '.png' }),
+                });
+
+                if (uploadResponse.ok) {
+                    const result = await uploadResponse.json();
+                    const imageUrl = result.url; // The public URL of the uploaded image from Cloudinary
+
+                    // Construct Telegram share link
+                    const telegramMessage = encodeURIComponent('Hello Boss, here is the filled request form:');
+                    const telegramLink = `https://t.me/share/url?url=${encodeURIComponent(imageUrl)}&text=${telegramMessage}`;
+
+                    // Open Telegram in a new tab
+                    window.open(telegramLink, '_blank');
+                    showMessage('Form image link prepared for Telegram!');
+
+                } else {
+                    const errorText = await uploadResponse.text();
+                    console.error('Upload error:', uploadResponse.statusText);
+                    console.error('Upload error details:', errorText);
+                    showMessage('Failed to upload image for sharing. Check console for details.', 'error');
+                }
+
+            } catch (error) {
+                console.error('Error sharing form as image:', error);
+                showMessage('An error occurred during sharing. Ensure backend is running and URL is correct.', 'error');
+            } finally {
+                // Restore original styles and remove capture-specific classes
+                document.body.style.overflow = originalBodyOverflow;
+                document.body.style.height = originalBodyHeight;
+                document.body.classList.remove('capture-active'); // Remove new class from body
+
+                captureWrapper.style.marginTop = originalCaptureWrapperMarginTop;
+                captureWrapper.style.height = originalCaptureWrapperHeight;
+                captureWrapper.style.overflow = originalCaptureWrapperOverflow;
+                captureWrapper.style.position = originalCaptureWrapperPosition;
+                actionButtons.classList.remove('hide-on-capture');
+            }
+        }
+    </script>
+</body>
+</html>
