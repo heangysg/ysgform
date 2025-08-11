@@ -15,11 +15,13 @@
         }
 
         .form-input {
-            @apply px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full;
+            @apply px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full text-center;
             word-break: break-word;
             height: auto;
             min-height: 50px;
             resize: none;
+            /* Added an explicit CSS property to ensure text alignment is centered */
+            text-align: center; 
         }
 
         .form-label {
@@ -76,16 +78,6 @@
         }
         
         .capture-active {
-            overflow: hidden !important;
-            position: relative !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            width: 100vw !important;
-            height: auto !important;
-            box-sizing: border-box !important;
-        }
-        
-        .capture-active #formContainer {
             box-shadow: none !important;
             border: none !important;
         }
@@ -183,7 +175,8 @@
     </style>
 </head>
 <body class="p-4 sm:p-6 lg:p-8">
-    <div id="captureWrapper">
+    <!-- The captureWrapper div is no longer needed since we are directly targeting the formContainer -->
+    <div> 
         <div class="max-w-4xl mx-auto bg-white p-6 sm:p-8 rounded-lg shadow-xl border border-gray-200" id="formContainer">
             <div class="grid grid-cols-3 items-center mb-6">
                 <div class="flex justify-start">
@@ -330,39 +323,15 @@
         
         // Function to handle the capture process common to both download and share
         async function prepareForCapture() {
-            const captureWrapper = document.getElementById('captureWrapper');
+            const formContainer = document.getElementById('formContainer');
             const actionButtons = document.getElementById('actionButtons');
 
             // Temporarily hide the buttons and apply capture-specific styles
             actionButtons.classList.add('hide-on-capture');
-            document.body.classList.add('capture-active');
+            formContainer.classList.add('capture-active'); // Applying capture-active to the formContainer
 
-            // Store original styles to revert later
-            const originalBodyOverflow = document.body.style.overflow;
-            const originalBodyHeight = document.body.style.height;
-            const originalCaptureWrapperMarginTop = captureWrapper.style.marginTop;
-            const originalCaptureWrapperHeight = captureWrapper.style.height;
-            const originalCaptureWrapperOverflow = captureWrapper.style.overflow;
-            const originalCaptureWrapperPosition = captureWrapper.style.position;
-
-            // Prepare the wrapper for capture
-            captureWrapper.style.marginTop = '200px';
-            captureWrapper.style.height = 'auto';
-            captureWrapper.style.overflow = 'visible';
-            captureWrapper.style.position = 'relative';
-
-            // Scroll to the very top of the window
-            window.scrollTo(0, 0);
-
-            // Give the browser time to render the new styles and scroll
-            await new Promise(resolve => setTimeout(resolve, 3000));
-
-            // Explicitly set the captureWrapper's height to its full scrollHeight
-            const currentScrollHeight = captureWrapper.scrollHeight;
-            captureWrapper.style.height = currentScrollHeight + 'px';
-
-            // Give another delay for final rendering stabilization
-            await new Promise(resolve => setTimeout(resolve, 2000));
+            // Give the browser time to render the new styles
+            await new Promise(resolve => setTimeout(resolve, 50));
 
             // Hide placeholders and captions before capture
             document.querySelectorAll('.name-input-field').forEach(input => {
@@ -376,14 +345,13 @@
             });
             
             return {
-                originalBodyOverflow, originalBodyHeight, originalCaptureWrapperMarginTop,
-                originalCaptureWrapperHeight, originalCaptureWrapperOverflow, originalCaptureWrapperPosition
+                // Return a dummy object since we're no longer modifying body styles
             };
         }
 
         // Function to revert styles after the capture is complete
         function revertAfterCapture(originalStyles) {
-            const captureWrapper = document.getElementById('captureWrapper');
+            const formContainer = document.getElementById('formContainer');
             const actionButtons = document.getElementById('actionButtons');
 
             // Restore placeholders and captions
@@ -398,14 +366,7 @@
             });
 
             // Restore original styles and remove capture-specific classes
-            document.body.style.overflow = originalStyles.originalBodyOverflow;
-            document.body.style.height = originalStyles.originalBodyHeight;
-            document.body.classList.remove('capture-active');
-
-            captureWrapper.style.marginTop = originalStyles.originalCaptureWrapperMarginTop;
-            captureWrapper.style.height = originalStyles.originalCaptureWrapperHeight;
-            captureWrapper.style.overflow = originalStyles.originalCaptureWrapperOverflow;
-            captureWrapper.style.position = originalStyles.originalCaptureWrapperPosition;
+            formContainer.classList.remove('capture-active');
             actionButtons.classList.remove('hide-on-capture');
         }
 
@@ -416,16 +377,14 @@
             let originalStyles;
             try {
                 originalStyles = await prepareForCapture();
-                const captureWrapper = document.getElementById('captureWrapper');
+                const formContainer = document.getElementById('formContainer');
 
-                const canvas = await html2canvas(captureWrapper, {
+                const canvas = await html2canvas(formContainer, {
                     scale: 3,
                     useCORS: true,
                     logging: false,
-                    x: 0,
-                    y: 0,
-                    width: captureWrapper.offsetWidth,
-                    height: captureWrapper.offsetHeight,
+                    // The x, y, width, and height options are no longer needed
+                    // as html2canvas automatically captures the element's dimensions.
                 });
 
                 const imageDataUrl = canvas.toDataURL('image/png');
@@ -451,16 +410,14 @@
             let originalStyles;
             try {
                 originalStyles = await prepareForCapture();
-                const captureWrapper = document.getElementById('captureWrapper');
+                const formContainer = document.getElementById('formContainer');
 
-                const canvas = await html2canvas(captureWrapper, {
+                const canvas = await html2canvas(formContainer, {
                     scale: 3,
                     useCORS: true,
                     logging: false,
-                    x: 0,
-                    y: 0,
-                    width: captureWrapper.offsetWidth,
-                    height: captureWrapper.offsetHeight,
+                    // The x, y, width, and height options are no longer needed
+                    // as html2canvas automatically captures the element's dimensions.
                 });
 
                 const imageDataUrl = canvas.toDataURL('image/png');
